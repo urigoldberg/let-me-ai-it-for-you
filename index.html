@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let Me Ask AI For You</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --container-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid var(--border);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text-main);
+        }
+
+        /* --- MODE A STYLES --- */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        .ai-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: all 0.2s;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .radio-label:hover {
+            border-color: var(--accent);
+        }
+
+        .radio-label input {
+            display: none;
+        }
+
+        .radio-label:has(input:checked) {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .result-box {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .result-box input {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .result-box button.copy-btn {
+            background-color: var(--border);
+        }
+
+        .result-box button.copy-btn:hover {
+            background-color: #475569;
+        }
+
+        .result-box button.copy-btn.success {
+            background-color: var(--success);
+        }
+
+        /* --- MODE B STYLES --- */
+        .typing-container {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1.25rem;
+            line-height: 1.5;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: var(--accent);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .redirect-text {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mode-a" class="container hidden">
+        <h1>Let Me Ask AI For You</h1>
+        
+        <div class="input-group">
+            <textarea id="prompt-input" placeholder="Type the question you want to ask the AI..."></textarea>
+        </div>
+
+        <div class="ai-options">
+            <label class="radio-label">
+                <input type="radio" name="ai-tool" value="chatgpt" checked>
+                ChatGPT
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="ai-tool" value="claude">
+                Claude
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="ai-tool" value="perplexity">
+                Perplexity
+            </label>
+        </div>
+
+        <button id="generate-btn">Generate Shareable Link</button>
+
+        <div id="result-area" class="result-box hidden">
+            <input type="text" id="generated-link" readonly>
+            <button id="copy-btn" class="copy-btn">Copy Link</button>
+        </div>
+    </div>
+
+    <div id="mode-b" class="container hidden">
+        <div class="typing-container">
+            <span><span id="typed-text"></span><span class="cursor"></span></span>
+        </div>
+        <p id="redirect-msg" class="redirect-text">Redirecting to AI...</p>
+    </div>
+
+    <script>
+        // AI URL Formats
+        const AI_URLS = {
+            chatgpt: "https://chatgpt.com/?hints=search&q=",
+            claude: "https://claude.ai/new?q=",
+            perplexity: "https://www.perplexity.ai/search/new?q="
+        };
+
+        // DOM Elements
+        const modeA = document.getElementById('mode-a');
+        const modeB = document.getElementById('mode-b');
+        
+        // Mode A Elements
+        const promptInput = document.getElementById('prompt-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const resultArea = document.getElementById('result-area');
+        const generatedLinkInput = document.getElementById('generated-link');
+        const copyBtn = document.getElementById('copy-btn');
+        const radioInputs = document.querySelectorAll('input[name="ai-tool"]');
+
+        // Mode B Elements
+        const typedTextEl = document.getElementById('typed-text');
+        const redirectMsg = document.getElementById('redirect-msg');
+
+        // Initialization Logic
+        function init() {
+            const params = new URLSearchParams(window.location.search);
+            const query = params.get('q');
+            const ai = params.get('ai');
+
+            // If we have both parameters and the AI tool is valid, trigger Mode B
+            if (query && ai && AI_URLS[ai]) {
+                modeB.classList.remove('hidden');
+                startModeB(query, ai);
+            } else {
+                modeA.classList.remove('hidden');
+            }
+        }
+
+        // --- MODE A LOGIC ---
+        generateBtn.addEventListener('click', () => {
+            const promptValue = promptInput.value.trim();
+            if (!promptValue) {
+                alert("Please enter a prompt first.");
+                return;
+            }
+
+            // Find selected AI
+            let selectedAi = 'chatgpt';
+            for (const radio of radioInputs) {
+                if (radio.checked) {
+                    selectedAi = radio.value;
+                    break;
+                }
+            }
+
+            // Build Shareable URL
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareableUrl = `${baseUrl}?q=${encodeURIComponent(promptValue)}&ai=${encodeURIComponent(selectedAi)}`;
+
+            // Display Link
+            generatedLinkInput.value = shareableUrl;
+            resultArea.classList.remove('hidden');
+            
+            // Reset copy button state
+            copyBtn.textContent = "Copy Link";
+            copyBtn.classList.remove('success');
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(generatedLinkInput.value);
+                copyBtn.textContent = "Copied!";
+                copyBtn.classList.add('success');
+                setTimeout(() => {
+                    copyBtn.textContent = "Copy Link";
+                    copyBtn.classList.remove('success');
+                }, 2000);
+            } catch (err) {
+                alert("Failed to copy link. Please select and copy manually.");
+            }
+        });
+
+        // --- MODE B LOGIC ---
+        function startModeB(textToType, aiTool) {
+            // XSS Security Note: The text is passed and handled purely as a string.
+            // Using .textContent prevents browser from rendering HTML tags.
+            
+            let i = 0;
+            const typingSpeed = 40; // ms per character
+
+            function typeWriter() {
+                if (i < textToType.length) {
+                    // Append text safely
+                    typedTextEl.textContent += textToType.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, typingSpeed);
+                } else {
+                    // Typing finished
+                    finishTypingAndRedirect(textToType, aiTool);
+                }
+            }
+
+            // Start typing after a short delay for effect
+            setTimeout(typeWriter, 800);
+        }
+
+        function finishTypingAndRedirect(promptValue, aiTool) {
+            redirectMsg.style.opacity = 1;
+
+            // Generate the final external AI URL safely
+            const finalUrl = AI_URLS[aiTool] + encodeURIComponent(promptValue);
+
+            // Redirect after 1.5 seconds so user can read the text
+            setTimeout(() => {
+                window.location.href = finalUrl;
+            }, 1500);
+        }
+
+        // Run on load
+        init();
+    </script>
+</body>
+</html>
